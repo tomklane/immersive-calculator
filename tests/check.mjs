@@ -33,7 +33,7 @@ async function pick(p, id, v) { await p.selectOption("#" + id, v); await p.waitF
 
 // ---- defaults ----
 let p = await open(URL0);
-const want = { prfps: "39", mvfps: "35", dlfps: "", dspeed: "1.5", shots: "", handles: "", nodes: "",
+const want = { prfps: "39", mvfps: "35", dlfps: "15", dspeed: "1.5", shots: "", handles: "", nodes: "",
                tcA: "00:00:00:00", tcB: "00:00:00:00", selDai: "proxy", selPost: "4444", fps: "90",
                costTb: "62", costHr: "50", backups: "1", offmb: "1100", trmb: "1100" };
 for (const [id, v] of Object.entries(want)) check("default " + id + " = " + JSON.stringify(v), (await val(p, id)) === v, await val(p, id));
@@ -53,11 +53,13 @@ check("ProRes 422 HQ 1080p29.97 stereo = 55.0 MB/s", hq.replace(/ /g, "").includ
 p = await open(URL0);
 await setTc(p, "tcB", "00:05:00:00");
 check("denoise 5 min @ 90fps, 1.5 fps, stereo = 5.0 hr", (await txt(p, "#tDnHr")) === "5.0", await txt(p, "#tDnHr"));
+await fill(p, "dlfps", "");
 const del = await txt(p, "#tDel");
 check("blank delivery fps dashes the render total", /MV-HEVC .* — *$/.test(del) || del.trim().endsWith("—"), del);
-await setTc(p, "tcA", "00:10:00:00");
-// dailies ProRes 54000 fr / 39 + MV-HEVC 54000 fr / 35 + denoise 18000 s = 5.8 node-hours
-check("total render hours = 5.8", (await txt(p, "#tNodeHr")) === "5.8", await txt(p, "#tNodeHr"));
+await fill(p, "dlfps", "15"); await setTc(p, "tcA", "00:10:00:00");
+// dailies ProRes 54000 fr / 39 + MV-HEVC 54000 fr / 35 + denoise 18000 s
+// + delivery MV-HEVC 27000 fr / 15 = 6.3 node-hours
+check("total render hours = 6.3", (await txt(p, "#tNodeHr")) === "6.3", await txt(p, "#tNodeHr"));
 
 // ---- formatting ----
 const body = await txt(p, "body");
@@ -117,6 +119,10 @@ await fill(p, "backups", "3");
 const stor3 = await txt(p, "#tStor");
 const $n = s => parseFloat(s.replace(/[^0-9.]/g, ""));
 check("3 backups triple storage $", Math.abs($n(stor3) - 3 * $n(stor1)) <= 1, [stor1, stor3]);
+const U = { kB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12 };
+const $b = s => { const m = s.match(/([0-9.]+) *(kB|MB|GB|TB)/); return m ? parseFloat(m[1]) * U[m[2]] : NaN; };
+const one = await txt(p, "#tData"), all = await txt(p, "#tDataAll");
+check("Data × sets multiplies the total", Math.abs($b(all) - 3 * $b(one)) / $b(all) < 0.01, [one, all]);
 check("total data shows the set count", (await txt(p, "#tData")).includes("× 3 sets"), await txt(p, "#tData"));
 
 check("no page errors", errors.length === 0, errors);
