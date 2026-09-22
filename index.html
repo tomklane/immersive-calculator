@@ -58,6 +58,20 @@
   .irow .m3{ width:110px }   /* 8160 × 7200 */
   .irow .m4{ width:134px }   /* ProRes 422 Proxy */
   .irow .m5{ width:162px }   /* Half — 4080 × 3600 */
+  /* timecode: four boxes, one per field */
+  .tc{ display:inline-flex; align-items:flex-start; }
+  .tc .sg{ display:flex; flex-direction:column; align-items:center; }
+  .tc .seg{
+    width:24px; height:19px; padding:0; text-align:center; font:inherit; font-size:12px;
+    border:1px solid #8f8f8f; border-radius:2px; background:#fff; color:#000; cursor:pointer; caret-color:transparent;
+  }
+  .tc .seg::selection{ background:transparent; color:inherit; }
+  .tc .seg:focus{ background:#000; color:#fff; border-color:#000; outline:none; }
+  .tc.all .seg{ background:#000; color:#fff; border-color:#000; }
+  .tc b{ font-weight:bold; width:7px; text-align:center; line-height:19px; }
+  .tc i{ font-style:normal; font-size:8.5px; color:#666; line-height:1.3; }
+  .mx .v.big .sets{ font-size:10.5px; font-weight:bold; font-style:normal; margin-left:4px; }
+  .dock span .sets{ font-size:10px; margin-left:4px; color:#bbb; }
   .irow .fixv{ font-weight:bold; line-height:19px; }   /* a codec that cannot be swapped */
   @media (max-width:640px){
     .band{ display:block; }
@@ -194,9 +208,8 @@
       <div class="bname">Capture</div>
       <div class="bfields">
         <div class="irow">
-          <span><label class="lbl" for="tcA">Capture runtime <em>per camera / day</em></label>
-            <input type="text" class="w3" id="tcA" value="00:00:00:00" spellcheck="false" inputmode="numeric"
-                   autocomplete="off" aria-label="Timecode: hours, minutes, seconds, frames"></span>
+          <span><label class="lbl" for="tcA_h">Capture runtime <em>per camera / day</em></label>
+            <span class="tc" id="tcA_box" title="Click: one field · Double-click: whole timecode"><span class="sg"><input type="text" class="seg" id="tcA_h" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Hours"><i>hr</i></span><b>:</b><span class="sg"><input type="text" class="seg" id="tcA_m" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Minutes"><i>min</i></span><b>:</b><span class="sg"><input type="text" class="seg" id="tcA_s" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Seconds"><i>sec</i></span><b>:</b><span class="sg"><input type="text" class="seg" id="tcA_f" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Frames"><i>fr</i></span><input type="hidden" id="tcA" value="00:00:00:00"></span></span>
         </div>
         <div class="irow">
           <span><label class="lbl" for="selCap">Capture codec</label>
@@ -212,7 +225,7 @@
             </select></span>
           <span><label class="lbl" for="cams">Cameras</label><input type="number" class="w1" id="cams" min="1" step="1" value="1"></span>
           <span><label class="lbl" for="days">Days</label><input type="number" class="w1" id="days" min="1" step="1" value="1"></span>
-          <span><label class="lbl" for="offmb">Offload <em>MB/s</em></label><input type="number" class="w2" id="offmb" min="1" step="10" value="1000"></span>
+          <span><label class="lbl" for="offmb">Offload <em>MB/s</em></label><input type="number" class="w2" id="offmb" min="1" step="10" value="1100"></span>
         </div>
       </div>
     </div>
@@ -221,7 +234,7 @@
       <div class="bname">Dailies</div>
       <div class="bfields">
         <div class="irow">
-          <span><label class="lbl" for="selDai">Codec</label>
+          <span><label class="lbl" for="selDai">Edit codec</label>
             <select class="m4" id="selDai">
               <option value="none">None</option>
               <option value="proxy" selected>ProRes 422 Proxy</option>
@@ -234,7 +247,7 @@
               <option value="1">Full</option><option value="2" selected>Half</option>
               <option value="4">Quarter</option>
             </select></span>
-          <span class="sep"><label class="lbl" for="mvdbr">MV-HEVC <em>Mb/s</em></label><input type="number" class="w1" id="mvdbr" min="1" step="1" value="50"></span>
+          <span class="sep"><label class="lbl" for="mvdbr">Review bitrate <em>Mb/s</em></label><input type="number" class="w1" id="mvdbr" min="1" step="1" value="50"></span>
         </div>
       </div>
     </div>
@@ -243,17 +256,12 @@
       <div class="bname">Post</div>
       <div class="bfields">
         <div class="irow">
-          <span><label class="lbl" for="tcB">Edit runtime</label>
-            <input type="text" class="w3" id="tcB" value="00:00:00:00" spellcheck="false" inputmode="numeric"
-                   autocomplete="off" aria-label="Timecode: hours, minutes, seconds, frames"></span>
+          <span><label class="lbl" for="tcB_h">Edit runtime</label>
+            <span class="tc" id="tcB_box" title="Click: one field · Double-click: whole timecode"><span class="sg"><input type="text" class="seg" id="tcB_h" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Hours"><i>hr</i></span><b>:</b><span class="sg"><input type="text" class="seg" id="tcB_m" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Minutes"><i>min</i></span><b>:</b><span class="sg"><input type="text" class="seg" id="tcB_s" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Seconds"><i>sec</i></span><b>:</b><span class="sg"><input type="text" class="seg" id="tcB_f" value="00" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Frames"><i>fr</i></span><input type="hidden" id="tcB" value="00:00:00:00"></span></span>
         </div>
         <div class="irow">
-          <span><label class="lbl" for="selTrim">Trimmed BRAW</label>
-            <select class="m4" id="selTrim">
-              <option value="cap" selected>Capture codec</option>
-              <option value="none">None</option>
-            </select></span>
-          <span class="sep"><label class="lbl" for="trmb">Transfer <em>MB/s</em></label><input type="number" class="w2" id="trmb" min="1" step="10" value="1000"></span>
+          <span><span class="lbl">Trimmed BRAW</span><span class="m4 fixv" id="trimName">BRAW 12:1</span></span>
+          <span class="sep"><label class="lbl" for="trmb">Transfer <em>MB/s</em></label><input type="number" class="w2" id="trmb" min="1" step="10" value="1100"></span>
         </div>
         <div class="irow">
           <span><label class="lbl" for="selPost">Denoise codec</label>
@@ -283,7 +291,7 @@
           <span id="wrapDlh" hidden><label class="lbl" for="dlh">Height</label><input type="number" class="w2" id="dlh" min="1" step="1" value="4320"></span>
         </div>
         <div class="irow">
-          <span><span class="lbl">Codec</span><span class="m4 fixv">MV-HEVC</span></span>
+          <span><span class="lbl">Deliverable</span><span class="m4 fixv">MV-HEVC</span></span>
           <span><label class="lbl" for="mvbr">Bitrate <em>Mb/s</em></label><input type="number" class="w2" id="mvbr" min="1" step="1" value="100"></span>
         </div>
       </div>
@@ -307,8 +315,9 @@
     <div class="band">
       <div class="bname">Cost</div>
       <div class="bfields"><div class="irow">
-        <span><label class="lbl" for="costTb">Storage <em>$ / TB</em></label><input type="number" class="w1" id="costTb" min="0" step="1" value="20"></span>
-        <span><label class="lbl" for="costHr">Render <em>$ / node hr</em></label><input type="number" class="w1" id="costHr" min="0" step="1" value="5"></span>
+        <span><label class="lbl" for="costTb">Storage <em>$ / TB</em></label><input type="number" class="w1" id="costTb" min="0" step="1" value="62"></span>
+        <span><label class="lbl" for="costHr">Render <em>$ / node hr</em></label><input type="number" class="w1" id="costHr" min="0" step="1" value="50"></span>
+        <span><label class="lbl" for="backups">Backups <em>× data</em></label><input type="number" class="w1" id="backups" min="1" step="1" value="1"></span>
       </div></div>
     </div>
 
@@ -561,76 +570,93 @@
   }
   function secsOf(sfx, fps){ return tcToFrames($("tc"+sfx).value, fps) / fps; }
 
-  // caret-addressable pairs: click a segment and overwrite it in place
-  var POS = [0,1,3,4,6,7,9,10];                  // editable char slots in HH:MM:SS:FF
-  var WEIGHT = [3600, 60, 1, 0];                 // seconds per unit; frames handled separately
-  function slotAt(i){
-    for (var k = 0; k < POS.length; k++) if (POS[k] >= i) return POS[k];
-    return POS[POS.length-1];
+  // four boxes: a click picks one field, a double-click takes the whole timecode
+  var SEG = ["h","m","s","f"];
+  function segEls(sfx){ return SEG.map(function(k){ return $("tc" + sfx + "_" + k); }); }
+  function syncTc(sfx, force){
+    var box = $("tc" + sfx + "_box");
+    if (!force && box.contains(document.activeElement)) return;   // mid-typing: leave the boxes alone
+    var t = $("tc" + sfx).value.split(":");
+    segEls(sfx).forEach(function(el, i){ el.value = t[i] || "00"; });
   }
-  function segIndex(i){ return i <= 1 ? 0 : i <= 4 ? 1 : i <= 7 ? 2 : 3; }
-  function place(el, i){ try{ el.setSelectionRange(i, i+1); }catch(e){} }
-
   function wireTc(sfx){
-    var el = $("tc"+sfx);
-
-    function caret(){ return slotAt(el.selectionStart || 0); }
-    function commit(fps){ tidy(sfx, fps); render(); }
-
-    el.addEventListener("focus", function(){
-      setTimeout(function(){ place(el, caret()); }, 0);
-    });
-    el.addEventListener("mouseup", function(){
-      setTimeout(function(){ place(el, caret()); }, 0);
-    });
-
-    el.addEventListener("keydown", function(e){
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      var fps = fpsNow(), F = Math.max(1, Math.round(fps)), i = caret(), k = POS.indexOf(i);
-
-      if (e.key >= "0" && e.key <= "9"){
-        e.preventDefault();
-        var v = el.value.split("");
-        v[i] = e.key;
-        el.value = v.join("");
-        place(el, POS[Math.min(k + 1, POS.length - 1)]);
-        render();
-      } else if (e.key === "Backspace"){
-        e.preventDefault();
-        var w = el.value.split("");
-        w[i] = "0";
-        el.value = w.join("");
-        place(el, POS[Math.max(k - 1, 0)]);
-        render();
-      } else if (e.key === "ArrowLeft"){
-        e.preventDefault(); place(el, POS[Math.max(k - 1, 0)]);
-      } else if (e.key === "ArrowRight"){
-        e.preventDefault(); place(el, POS[Math.min(k + 1, POS.length - 1)]);
-      } else if (e.key === "ArrowUp" || e.key === "ArrowDown"){
-        e.preventDefault();
-        var seg  = segIndex(i);
-        var step = (seg === 3 ? 1 : WEIGHT[seg] * F) * (e.shiftKey ? 10 : 1);
-        var fr   = tcToFrames(el.value, fps) + (e.key === "ArrowUp" ? step : -step);
-        el.value = tcStr(Math.max(0, fr), fps);
-        place(el, i); render();
-      } else if (e.key === "Enter"){
-        commit(fps); place(el, i);
-      } else if (e.key !== "Tab" && e.key.length === 1){
-        e.preventDefault();                       // block stray characters
-      }
-    });
-
-    el.addEventListener("paste", function(e){
-      e.preventDefault();
-      var txt = ((e.clipboardData || window.clipboardData).getData("text") || "").trim();
+    var box = $("tc" + sfx + "_box"), hid = $("tc" + sfx), segs = segEls(sfx);
+    var typed = 0, whole = false, buf = "";
+    function sel(el){ try{ el.setSelectionRange(0, el.value.length); }catch(e){} }
+    function join(){ hid.value = segs.map(function(el){ return ("00" + (el.value || "0")).slice(-2); }).join(":"); }
+    function setWhole(on){ whole = on; buf = ""; box.classList.toggle("all", on); }
+    function go(k){ k = Math.max(0, Math.min(3, k)); typed = 0; segs[k].focus(); sel(segs[k]); }
+    function commit(){ setWhole(false); tidy(sfx, fpsNow()); syncTc(sfx, true); render(); }
+    function fromDigits(){ hid.value = digitsToTc(buf); syncTc(sfx, true); render(); }
+    function paste(txt){
       var fps = fpsNow();
-      el.value = txt.indexOf(":") >= 0
+      hid.value = txt.indexOf(":") >= 0
         ? tcStr(tcToFrames(txt, fps), fps)                // colons: right-align the parts
         : tcStr(tcToFrames(digitsToTc(txt), fps), fps);   // bare digits: right-align as pairs
-      render(); place(el, POS[0]);
-    });
+      setWhole(false); syncTc(sfx, true); render();
+    }
 
-    el.addEventListener("blur", function(){ commit(fpsNow()); });
+    segs.forEach(function(el, k){
+      el.addEventListener("mousedown", function(e){
+        e.preventDefault();                          // no caret: the box is one unit
+        if (e.detail === 1 && whole) setWhole(false);
+        if (document.activeElement !== el){ typed = 0; el.focus(); }
+        sel(el);
+      });
+      el.addEventListener("dblclick", function(e){ e.preventDefault(); setWhole(true); el.focus(); sel(el); });
+      el.addEventListener("focus", function(){ typed = 0; setTimeout(function(){ sel(el); }, 0); });
+
+      el.addEventListener("keydown", function(e){
+        if (e.metaKey || e.ctrlKey || e.altKey){
+          if ((e.key === "a" || e.key === "A") && !e.altKey){ e.preventDefault(); setWhole(true); }
+          return;
+        }
+        var key = e.key;
+        if (/^[0-9]$/.test(key)){
+          e.preventDefault();
+          if (whole){ buf = (buf + key).replace(/^0+/, "").slice(-8); fromDigits(); sel(el); return; }
+          el.value = (typed === 0 ? "0" + key : el.value.slice(-1) + key);
+          typed++; join(); render();
+          if (typed >= 2 && k < 3) go(k + 1); else sel(el);
+        } else if (key === "Backspace" || key === "Delete"){
+          e.preventDefault();
+          if (whole){ buf = buf.slice(0, -1); fromDigits(); sel(el); return; }
+          el.value = "00"; typed = 0; join(); render(); sel(el);
+        } else if (key === "ArrowLeft"){
+          e.preventDefault(); setWhole(false); go(k - 1);
+        } else if (key === "ArrowRight" || key === ":" || key === "." || key === ";" || key === " "){
+          e.preventDefault(); setWhole(false); go(k + 1);
+        } else if (key === "ArrowUp" || key === "ArrowDown"){
+          e.preventDefault(); setWhole(false);
+          var fps = fpsNow(), F = Math.max(1, Math.round(fps));
+          var step = [3600*F, 60*F, F, 1][k] * (e.shiftKey ? 10 : 1);
+          join();
+          var fr = tcToFrames(hid.value, fps) + (key === "ArrowUp" ? step : -step);
+          hid.value = tcStr(Math.max(0, fr), fps);
+          typed = 0; syncTc(sfx, true); render(); sel(el);
+        } else if (key === "Enter"){
+          e.preventDefault(); commit(); sel(el);
+        } else if (key === "Escape"){
+          if (whole){ e.preventDefault(); setWhole(false); sel(el); }
+        } else if (key !== "Tab" && key.length === 1){
+          e.preventDefault();                       // block stray characters
+        }
+      });
+      // phone keyboards skip keydown digits: tidy whatever arrived
+      el.addEventListener("input", function(){
+        el.value = ("00" + el.value.replace(/\D/g, "")).slice(-2);
+        typed = 2; join(); render(); sel(el);
+      });
+      el.addEventListener("paste", function(e){
+        e.preventDefault();
+        paste(((e.clipboardData || window.clipboardData).getData("text") || "").trim());
+        sel(el);
+      });
+    });
+    box.addEventListener("focusout", function(e){
+      if (!e.relatedTarget || !box.contains(e.relatedTarget)) commit();
+    });
+    hid.addEventListener("blur", commit);           // scripted entry (tests, old links)
   }
 
   /* ---- matrices ---- */
@@ -754,8 +780,8 @@
     var prF   = speed("prfps"), mvF = speed("mvfps"), dlF = speed("dlfps"), sp = speed("dspeed");
     var mono  = $("dmode").value === "mono";
     var nodes = Math.max(1, Math.round(n($("nodes"),1)));
-    var offBps = Math.max(1, n($("offmb"),1000)) * 1e6;
-    var trBps  = Math.max(1, n($("trmb"),1000)) * 1e6;   // trimmed negative hand-off
+    var offBps = Math.max(1, n($("offmb"),1100)) * 1e6;
+    var trBps  = Math.max(1, n($("trmb"),1100)) * 1e6;   // trimmed negative hand-off
 
     // node-seconds of compute, then wall clock across the farm
     var noDai = $("selDai").value === "none";   // ProRes master off; MV-HEVC still made
@@ -783,8 +809,8 @@
         idPost = $("selPost").value, idDel = $("selDel").value;
 
     // the trimmed negative is the capture codec, cut down to the conform plus handles
-    var noTrim = $("selTrim").value === "none";
-    $("selTrim").options[0].text = BY[idCap].name;
+    var noTrim = false;                            // always made: it follows the capture codec
+    $("trimName").textContent = BY[idCap].name;
 
     var sets = [
       {th:"thCap", tb:"tCap", list:CAPTURE, f:M,  secs:secA, sel:"selCap", cur:idCap, open:open.cap,
@@ -833,10 +859,12 @@
 
     var nodeHrs  = nodeSec / 3600;          // every render step, in node-hours
     var dnHrs    = noPost ? 0 : cDn / 3600; // the denoise pass alone
-    var storage$ = (tHi/1e12) * Math.max(0, n($("costTb"),0));
+    var sets     = Math.max(1, Math.round(n($("backups"),1)));   // copies of the whole data set
+    var storage$ = (tHi/1e12) * sets * Math.max(0, n($("costTb"),0));
     var render$  = nodeHrs * Math.max(0, n($("costHr"),0));
 
-    $("tData").innerHTML   = rng(tLo, tHi, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>');
+    var setTag = (tHi > 0) ? ' <span class="sets">× ' + sets + (sets === 1 ? " set" : " sets") + '</span>' : "";
+    $("tData").innerHTML   = rng(tLo, tHi, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>') + setTag;
     $("tCost").textContent = money(storage$ + render$);
     $("tCapV").textContent  = rng(szC.lo,  szC.hi,  bytes);
     $("tDaiV").textContent  = rng(szDa.lo, szDa.hi, bytes);
@@ -848,9 +876,10 @@
     $("tStor").textContent   = money(storage$);
     $("tRend").textContent   = money(render$);
 
-    $("dData").innerHTML   = rng(tLo, tHi, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>');
+    $("dData").innerHTML   = rng(tLo, tHi, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>') + setTag;
     $("dCost").textContent = money(storage$ + render$);
 
+    syncTc("A"); syncTc("B");
     writeHash();
     fitFrame();
   }
@@ -858,8 +887,8 @@
   /* ---- the estimate lives in the URL, so an estimate is a link ---- */
   var FIELDS = ["res","cw","ch","fps","cfps","cams","days","offmb",
                 "tcA","tcB",
-                "selCap","selDai","dres","mvdbr","selTrim","trmb","selPost","selDel","mvbr",
-                "prfps","mvfps","dlfps","dspeed","dmode","shots","handles","nodes","costTb","costHr",
+                "selCap","selDai","dres","mvdbr","trmb","selPost","selDel","mvbr",
+                "prfps","mvfps","dlfps","dspeed","dmode","shots","handles","nodes","costTb","costHr","backups",
                 "dlres","dlw","dlh"];
   var DEF = {};
   FIELDS.forEach(function(id){ DEF[id] = $(id).value; });
@@ -988,8 +1017,8 @@
 
   /* ---- wiring ---- */
   ["cw","ch","fps","cfps","cams","days","offmb","dres","mvbr","mvdbr",
-   "prfps","mvfps","dlfps","dspeed","dmode","shots","handles","nodes","costTb","costHr",
-   "dlres","dlw","dlh","trmb","selCap","selDai","selTrim","selPost","selDel"].forEach(function(id){
+   "prfps","mvfps","dlfps","dspeed","dmode","shots","handles","nodes","costTb","costHr","backups",
+   "dlres","dlw","dlh","trmb","selCap","selDai","selPost","selDel"].forEach(function(id){
     $(id).addEventListener("input", render);
     $(id).addEventListener("change", render);
   });
@@ -1049,7 +1078,7 @@
 
   readHash();
   // a linked value the menu no longer offers would leave the select empty
-  ["selCap","selDai","selTrim","selPost","selDel","res","dres","dlres","fps","dmode"].forEach(function(id){
+  ["selCap","selDai","selPost","selDel","res","dres","dlres","fps","dmode"].forEach(function(id){
     if (!$(id).value) $(id).selectedIndex = 0;
   });
   $("uGb").setAttribute("aria-pressed", unit === "Gb" ? "true" : "false");

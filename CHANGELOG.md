@@ -3,6 +3,14 @@
 Reconstructed from the development conversation up to the move to GitHub.
 From here on, one entry per change.
 
+## 2026-09-23 — defaults, timecode boxes, backups
+- Defaults: storage $62/TB, render $50/node hr, offload and transfer 1100 MB/s.
+- Timecode entry is four boxes (hr min sec fr): click one to edit that field,
+  double-click to type the whole timecode.
+- Backups in Cost multiply storage $; Total Data shows how many sets are needed.
+- Trimmed BRAW is no longer a menu: it shows the capture codec; only transfer speed is set.
+- Renamed: Dailies Codec → Edit codec, MV-HEVC → Review bitrate, Post Codec MV-HEVC → Deliverable MV-HEVC.
+
 ## 2026-09-22 — frame height
 - The calculator repeats its height report for a few seconds and answers a ping, and the
   Squarespace loader pings on load, so the frame sizes itself even when the page misses the first report.

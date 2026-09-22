@@ -53,11 +53,11 @@ There is no localStorage and no presets: they were removed on request.
 ## Defaults
 
 Resolution 8160 × 7200 per eye, 90 fps. Capture and edit runtime 00:00:00:00.
-Capture BRAW 12:1. Dailies ProRes 422 Proxy at half res + MV-HEVC 50 Mb/s.
-Trimmed BRAW on (follows the capture codec). Denoise ProRes 4444, stereo.
-Delivery ProRes None + MV-HEVC 100 Mb/s at 4320 × 4320.
+Capture BRAW 12:1. Dailies: edit codec ProRes 422 Proxy at half res + review bitrate (MV-HEVC) 50 Mb/s.
+Trimmed BRAW always on: fixed to the capture codec, not a menu; only its transfer speed is set. Denoise ProRes 4444, stereo.
+Delivery ProRes None + deliverable MV-HEVC 100 Mb/s at 4320 × 4320.
 Process: ProRes 39 fps, MV-HEVC 35 fps, Delivery blank, Denoise 1.5 fps;
-Shots, Handles, Nodes blank. Storage $20/TB, render $5/node hr. Offload/transfer 1000 MB/s.
+Shots, Handles, Nodes blank. Storage $62/TB, render $50/node hr, backups 1. Offload/transfer 1100 MB/s.
 
 ## The math (verified — keep the anchors)
 
@@ -79,7 +79,13 @@ Shots, Handles, Nodes blank. Storage $20/TB, render $5/node hr. Offload/transfer
 - A blank or zero MV-HEVC bitrate means that stream is not made: row dashes, not in totals.
 - A blank speed means render time unknown: that row dashes and is left out of the totals.
   Blank Nodes = 1; blank Shots/Handles = 0.
+- Backups = number of copies of the whole data set: Storage $ = data × backups × $/TB.
+  Total Data shows the set count beside it (× 2 sets).
 - Timecode is non-drop at every rate (known limitation at 29.97 / 59.94).
+- Timecode entry is four boxes (hr min sec fr) over a hidden `#tcA` / `#tcB` that holds the value.
+  Click a box: that field is selected, two digits fill it and move on. Double-click (or Ctrl/Cmd+A):
+  the whole timecode is selected and digits shift in from the right, NLE style. Up/Down steps a field.
+  Overflow (95 frames at 90 fps) carries on commit.
 - Typing a Custom fps that equals a preset switches Frame rate to that preset, else Custom.
 
 ## Pitfalls already hit
