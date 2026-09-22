@@ -34,7 +34,8 @@ async function pick(p, id, v) { await p.selectOption("#" + id, v); await p.waitF
 // ---- defaults ----
 let p = await open(URL0);
 const want = { prfps: "39", mvfps: "35", dlfps: "", dspeed: "1.5", shots: "", handles: "", nodes: "",
-               tcA: "00:00:00:00", tcB: "00:00:00:00", selDai: "proxy", selPost: "4444", fps: "90" };
+               tcA: "00:00:00:00", tcB: "00:00:00:00", selDai: "proxy", selPost: "4444", fps: "90",
+               costTb: "62", costHr: "50", backups: "1", offmb: "1100", trmb: "1100" };
 for (const [id, v] of Object.entries(want)) check("default " + id + " = " + JSON.stringify(v), (await val(p, id)) === v, await val(p, id));
 check("presets removed", (await p.$("#pSel")) === null, "pSel present");
 check("clean start has no link state", (await p.evaluate(() => location.hash)) === "", await p.evaluate(() => location.hash));
@@ -91,6 +92,32 @@ check("embed mode reads the passed estimate", (await val(pe, "nodes")) === "3", 
 await pe.click("#share"); await pe.waitForTimeout(200);
 const out = await pe.$eval("#shareOut", el => el.value);
 check("embed Copy link points at the website", out === "" || out.startsWith(host + "#nodes=3"), out);
+
+// ---- timecode boxes: click one field, double-click the whole timecode ----
+p = await open(URL0);
+await p.click("#tcA_m"); await p.keyboard.type("30");
+check("click minutes, type 30 -> 00:30:00:00", (await val(p, "tcA")) === "00:30:00:00", await val(p, "tcA"));
+check("two digits move on to seconds", await p.evaluate(() => document.activeElement.id) === "tcA_s", await p.evaluate(() => document.activeElement.id));
+await p.keyboard.type("5"); await p.click("#tcB_h");
+check("a single digit fills its field: 00:30:05:00", (await val(p, "tcA")) === "00:30:05:00", await val(p, "tcA"));
+await p.dblclick("#tcA_s"); await p.keyboard.type("100000"); await p.keyboard.press("Enter");
+check("double-click, type 100000 -> 00:10:00:00", (await val(p, "tcA")) === "00:10:00:00", await val(p, "tcA"));
+check("the boxes show the fields", (await val(p, "tcA_m")) === "10" && (await val(p, "tcA_h")) === "00", await val(p, "tcA_m"));
+await p.click("#tcA_f"); await p.keyboard.type("95"); await p.click("#cams");
+check("frames past the rate carry into seconds", (await val(p, "tcA")) === "00:10:01:05", await val(p, "tcA"));
+
+// ---- trimmed BRAW follows capture; backups multiply storage ----
+p = await open(URL0);
+check("trimmed BRAW is not a menu", (await p.$("#selTrim")) === null, "selTrim present");
+await pick(p, "selCap", "b8");
+check("trimmed BRAW shows the capture codec", (await txt(p, "#trimName")) === "BRAW 8:1", await txt(p, "#trimName"));
+await setTc(p, "tcA", "01:00:00:00");
+const stor1 = await txt(p, "#tStor");
+await fill(p, "backups", "3");
+const stor3 = await txt(p, "#tStor");
+const $n = s => parseFloat(s.replace(/[^0-9.]/g, ""));
+check("3 backups triple storage $", Math.abs($n(stor3) - 3 * $n(stor1)) <= 1, [stor1, stor3]);
+check("total data shows the set count", (await txt(p, "#tData")).includes("× 3 sets"), await txt(p, "#tData"));
 
 check("no page errors", errors.length === 0, errors);
 await browser.close();
