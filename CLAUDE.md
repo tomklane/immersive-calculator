@@ -56,7 +56,7 @@ Resolution 8160 × 7200 per eye, 90 fps. Capture and edit runtime 00:00:00:00.
 Capture BRAW 12:1. Dailies: edit codec ProRes 422 Proxy at half res + review bitrate (MV-HEVC) 50 Mb/s.
 Trimmed BRAW always on: fixed to the capture codec, not a menu; only its transfer speed is set. Denoise ProRes 4444, stereo.
 Delivery ProRes None + deliverable MV-HEVC 100 Mb/s at 4320 × 4320.
-Process: ProRes 39 fps, MV-HEVC 35 fps, Delivery blank, Denoise 1.5 fps;
+Process: ProRes 39 fps, MV-HEVC 35 fps, ProRes delivery 15 fps, Denoise 1.5 fps;
 Shots, Handles, Nodes blank. Storage $62/TB, render $50/node hr, backups 1. Offload/transfer 1100 MB/s.
 
 ## The math (verified — keep the anchors)
@@ -80,7 +80,7 @@ Shots, Handles, Nodes blank. Storage $62/TB, render $50/node hr, backups 1. Offl
 - A blank speed means render time unknown: that row dashes and is left out of the totals.
   Blank Nodes = 1; blank Shots/Handles = 0.
 - Backups = number of copies of the whole data set: Storage $ = data × backups × $/TB.
-  Total Data shows the set count beside it (× 2 sets).
+  Total Data shows the set count beside it (× 2 sets); Data × sets is the stored total.
 - Timecode is non-drop at every rate (known limitation at 29.97 / 59.94).
 - Timecode entry is four boxes (hr min sec fr) over a hidden `#tcA` / `#tcB` that holds the value.
   Click a box: that field is selected, two digits fill it and move on. Double-click (or Ctrl/Cmd+A):

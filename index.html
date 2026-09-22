@@ -302,7 +302,7 @@
       <div class="bfields"><div class="irow">
         <span><label class="lbl" for="prfps">ProRes <em>fps</em></label><input type="number" class="w1" id="prfps" min="0.0001" step="0.1" value="39"></span>
         <span class="sep"><label class="lbl" for="mvfps">MV-HEVC <em>fps</em></label><input type="number" class="w1" id="mvfps" min="0.0001" step="0.1" value="35"></span>
-        <span><label class="lbl" for="dlfps">Delivery <em>fps</em></label><input type="number" class="w1" id="dlfps" min="0.0001" step="0.1" value=""></span>
+        <span><label class="lbl" for="dlfps">ProRes delivery <em>fps</em></label><input type="number" class="w1" id="dlfps" min="0.0001" step="0.1" value="15"></span>
         <span><label class="lbl" for="dspeed">Denoise <em>fps</em></label><input type="number" class="w1" id="dspeed" min="0.0001" step="0.1" value="1.5"></span>
         <span><label class="lbl" for="dmode">Render</label>
           <select class="m2" id="dmode"><option value="stereo" selected>Stereo</option><option value="mono">Mono</option></select></span>
@@ -367,6 +367,7 @@
     <h2><span class="nm">Total</span></h2>
     <div class="mx">
       <div class="lead"><span class="lbl">Data</span><div class="v big" id="tData"></div></div>
+      <div class="lead"><span class="lbl">Data × sets</span><div class="v big" id="tDataAll"></div></div>
       <div class="lead"><span class="lbl">Total render hours</span><div class="v big" id="tNodeHr"></div></div>
     </div>
     <div class="mx sub">
@@ -865,6 +866,8 @@
 
     var setTag = (tHi > 0) ? ' <span class="sets">× ' + sets + (sets === 1 ? " set" : " sets") + '</span>' : "";
     $("tData").innerHTML   = rng(tLo, tHi, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>') + setTag;
+    // every copy that has to be stored, added up
+    $("tDataAll").innerHTML = rng(tLo*sets, tHi*sets, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>');
     $("tCost").textContent = money(storage$ + render$);
     $("tCapV").textContent  = rng(szC.lo,  szC.hi,  bytes);
     $("tDaiV").textContent  = rng(szDa.lo, szDa.hi, bytes);

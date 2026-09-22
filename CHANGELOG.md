@@ -3,6 +3,10 @@
 Reconstructed from the development conversation up to the move to GitHub.
 From here on, one entry per change.
 
+## 2026-09-23 — ProRes delivery fps
+- Process: Delivery fps renamed ProRes delivery fps, default 15.
+- Total: Data × sets, the data total multiplied by backups.
+
 ## 2026-09-23 — defaults, timecode boxes, backups
 - Defaults: storage $62/TB, render $50/node hr, offload and transfer 1100 MB/s.
 - Timecode entry is four boxes (hr min sec fr): click one to edit that field,
