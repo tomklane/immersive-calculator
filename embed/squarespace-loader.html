@@ -1,6 +1,6 @@
 <!-- Immersive Project Calculator: loads the live copy from GitHub Pages.
-     Paste into ONE Squarespace Code Block (HTML mode). Never include <html>, <head> or <body> here:
-     Squarespace rewrites any <html tag it finds inside a code block. -->
+     Paste into ONE Squarespace Code Block (HTML mode). No html, head or body tags here, not even
+     in a comment: Squarespace rewrites the html tag wherever it finds it in a code block. -->
 <iframe id="idrc" title="Immersive Project Calculator"
         style="width:100%;height:1250px;border:0;display:block"></iframe>
 <script>
@@ -20,6 +20,9 @@
     }
   });
   window.addEventListener("hashchange", load);   // a pasted link in the same tab
+  f.addEventListener("load", function(){         // ask for the height in case the first report was missed
+    try{ f.contentWindow.postMessage({type: "idrc-ping"}, origin); }catch(e){}
+  });
   load();
 })();
 </script>
