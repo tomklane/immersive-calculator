@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Data rate, storage, render time and cost for stereoscopic immersive projects: capture, dailies, trim, denoise, delivery.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 fill=%22%23000%22/%3E%3Crect x=%223%22 y=%225%22 width=%224%22 height=%226%22 fill=%22%23fff%22/%3E%3Crect x=%229%22 y=%225%22 width=%224%22 height=%226%22 fill=%22%23fff%22/%3E%3C/svg%3E">
+<title>Immersive Project Calculator</title>
+<style>
+  :root{ color-scheme: light; --ac:#0b53c9; }
+  *{ box-sizing:border-box }
+
+  body{
+    margin:0; background:#fff; color:#000;
+    font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size:12px; line-height:1.35;
+  }
+  .wrap{ max-width:980px; margin:0 auto; padding-inline:14px; padding-block:10px 84px; }
+
+  h1{ font-size:15px; font-weight:bold; margin:0 0 7px; letter-spacing:-.01em; }
+  h2{
+    font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em;
+    margin:0; padding:3px 8px; background:#000; color:#fff;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  h2 .nm{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  h2 em{ font-style:italic; font-weight:normal; text-transform:none; letter-spacing:.02em; }
+  .tog{
+    flex:none; font-family:inherit; font-size:9.5px; font-weight:bold; letter-spacing:.04em;
+    background:#fff; color:#000; border:1px solid #fff; padding:0 6px; cursor:pointer; height:15px;
+  }
+  .tog:hover{ background:#ccc; }
+
+  .lbl{ font-size:10px; font-weight:bold; display:block; line-height:1.25; }
+  .lbl em{ font-style:italic; font-weight:normal; color:#555; }
+  .panel{ border:1px solid #000; margin-bottom:6px; }
+
+  /* ---- input bands ---- */
+  .band{ display:flex; border-bottom:1px solid #000; }
+  .band:last-of-type{ border-bottom:none; }
+  .bname{
+    flex:0 0 76px; padding:5px 8px; background:#f0f0f0; border-right:1px solid #000;
+    font-size:9.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.07em;
+  }
+  .bfields{ flex:1; min-width:0; }
+  .irow{ display:flex; flex-wrap:wrap; gap:5px 12px; padding:4px 8px; border-bottom:1px solid #ddd; }
+  .irow:last-child{ border-bottom:none; }
+  /* the span takes the width of its label; the control inside is sized to its value */
+  .irow > span{ display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; }
+  /* a hairline where the MV-HEVC fields begin, so each row reads as two groups */
+  .irow > span.sep{ border-left:1px solid #ddd; padding-left:12px; margin-left:2px; }
+  .irow .w1{ width:36px }    /* 1-2 digits: 1, 20, 24 */
+  .irow .w2{ width:50px }    /* 3-4 digits: 8160, 1000 */
+  .irow .w3{ width:88px }    /* timecode */
+  .irow .m1{ width:68px }    /* 90, 23.98 */
+  .irow .m2{ width:82px }    /* Stereo / Mono */
+  .irow .m3{ width:110px }   /* 8160 × 7200 */
+  .irow .m4{ width:134px }   /* ProRes 422 Proxy */
+  .irow .m5{ width:162px }   /* Half — 4080 × 3600 */
+  .irow .fixv{ font-weight:bold; line-height:19px; }   /* a codec that cannot be swapped */
+  @media (max-width:640px){
+    .band{ display:block; }
+    .bname{ border-right:none; border-bottom:1px solid #ccc; }
+  }
+
+  /* native spinners reserve ~15px and clip 4-digit values in a 1-track field */
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  input:focus-visible, select:focus-visible, button:focus-visible, tr:focus-visible{
+    outline:2px solid #000; outline-offset:-2px;
+  }
+
+  .strip{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:3px 8px; background:#e6e6e6; border-top:1px solid #000;
+  }
+  .strip .fmt{ font-size:13px; font-weight:bold; }
+  .strip .fmt em{ font-style:italic; font-weight:normal; font-size:11px; }
+  .tools{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+  .tools select, .tools input{ width:auto; height:19px; font-size:11px; }
+  .tools select{ width:112px; }
+  .tools input{ width:86px; }
+  .tools #shareOut{ width:220px; }
+  .tools button{
+    font-family:inherit; font-size:10px; font-weight:bold; height:19px; padding:0 7px;
+    border:1px solid #000; background:#fff; color:#000; cursor:pointer;
+  }
+  .tools button:hover{ background:#ccc; }
+  .unit{ display:flex; margin-left:4px; }
+  .unit button{
+    font-family:inherit; font-size:10px; font-weight:bold; height:19px;
+    padding:0 9px; border:1px solid #000; background:#fff; color:#000; cursor:pointer; margin-right:-1px;
+  }
+  .unit button[aria-pressed=true]{ background:#000; color:#fff; }
+
+  /* ---- matrices ---- */
+  .scroll{ overflow-x:auto; }
+  table{ border-collapse:collapse; width:100%; min-width:760px; table-layout:fixed; }
+  table.lean{ min-width:0; }
+  th, td{ padding:1px 8px; text-align:right; white-space:nowrap; border-bottom:1px solid #e0e0e0; }
+  th{
+    font-size:9px; font-weight:normal; text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid #000; color:#555;
+  }
+  th em{ font-style:italic; font-weight:bold; text-transform:none; letter-spacing:0; color:#000; }
+  th:first-child, td:first-child{ text-align:left; }
+  td{ font-size:12px; }
+  td:first-child{ font-weight:bold; }
+  th.tot, td.tot{ background:#f1f1f1; }
+  th.tot{ font-weight:bold; color:#000; }
+  td.tot{ font-weight:bold; }
+  td.tot .u{ font-weight:bold; color:#333; }
+  /* zebra counts data rows only, so group headings never break the rhythm */
+  tbody tr.alt td{ background:#f8f8f8; }
+  tbody tr.alt td.tot{ background:#eaeaea; }
+  tbody tr.grp td{ background:#efefef; }
+  tbody tr.on td{ background:#edf3fd; }
+  tbody tr.on td.tot{ background:#dfe9fa; }
+  tbody tr.pick:hover td{ background:#efefef; }
+  tbody tr.pick:hover td.tot{ background:#e4e4e4; }
+  tbody tr.on:hover td{ background:#e4edfc; }
+  tbody tr.on:hover td.tot{ background:#d5e3f8; }
+  tbody tr.on td:first-child{ color:var(--ac); }
+  td .u{ display:inline-block; width:25px; padding-left:5px; text-align:left;
+         font-size:10px; font-weight:normal; color:#555; }
+  tr.grp td{
+    font-size:9px; font-style:italic; font-weight:bold; background:#f7f7f7; color:#555;
+    letter-spacing:.03em; padding:1px 8px;
+  }
+  tr.pick{ cursor:pointer; }
+  tr.on td:first-child{ box-shadow:inset 3px 0 0 var(--ac); }
+  tbody tr:last-child td{ border-bottom:none; }
+
+  /* ---- tiles ---- */
+  .mx{ display:flex; flex-wrap:wrap; }
+  .mx.sub{ border-top:1px solid #ccc; }
+  .mx > div{ flex:1 1 92px; padding:3px 8px; border-right:1px solid #ddd; min-width:0; }
+  .mx > div:last-child{ border-right:none; }
+  .mx .v{ font-size:12.5px; font-weight:bold; }
+  #total .mx.sub > div{ padding:4px 8px; }
+  #total .mx.sub .lbl{ font-size:10px; color:#444; }
+  #total .mx.sub .v{ font-size:15px; letter-spacing:-.01em; }
+  .mx .v.big{ font-size:19px; line-height:1.1; }
+  .mx .v.big em{ font-size:10.5px; font-weight:normal; font-style:italic; }
+  .mx > div.lead{ flex:1.6 1 130px; }
+  #total{ border-width:2px; }
+
+  /* ---- sticky total ---- */
+  .dock{
+    position:fixed; left:0; right:0; bottom:0; z-index:10;
+    background:#000; color:#fff; border-top:2px solid #000;
+    padding:3px 14px; padding-bottom:calc(3px + env(safe-area-inset-bottom, 0px));
+    display:flex; gap:22px; align-items:baseline; justify-content:center; flex-wrap:wrap;
+  }
+  .dock b{ font-size:9.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.07em; color:#bbb; }
+  .dock span{ font-size:16px; font-weight:bold; margin-left:7px; }
+  .dock span em{ font-size:10px; font-weight:normal; font-style:italic; color:#bbb; }
+  /* inside the website the bar would pin to the frame, not the window; the Total panel carries it */
+  html.embedded .dock{ display:none; }
+  html.embedded .wrap{ padding-block:10px 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Immersive Project Calculator</h1>
+
+  <div class="panel">
+    <div class="band">
+      <div class="bname">Project</div>
+      <div class="bfields"><div class="irow">
+        <span><label class="lbl" for="res">Resolution <em>/ eye</em></label>
+          <select class="m3" id="res">
+            <option value="8160x7200" selected>8160 × 7200</option>
+            <option value="custom">Custom</option>
+          </select></span>
+        <span><label class="lbl" for="cw">Width</label><input type="number" class="w2" id="cw" min="1" step="1" value="8160"></span>
+        <span><label class="lbl" for="ch">Height</label><input type="number" class="w2" id="ch" min="1" step="1" value="7200"></span>
+        <span><label class="lbl" for="fps">Frame rate</label>
+          <select class="m1" id="fps">
+            <option value="23.98">23.98</option><option value="24">24</option>
+            <option value="25">25</option><option value="29.97">29.97</option>
+            <option value="30">30</option><option value="50">50</option>
+            <option value="59.94">59.94</option><option value="60">60</option>
+            <option value="90" selected>90</option><option value="custom">Custom</option>
+          </select></span>
+        <span id="wrapFps" hidden><label class="lbl" for="cfps">Custom fps</label><input type="number" class="w2" id="cfps" min="1" step="0.001" value="90"></span>
+      </div></div>
+    </div>
+
+    <div class="band">
+      <div class="bname">Capture</div>
+      <div class="bfields">
+        <div class="irow">
+          <span><label class="lbl" for="tcA">Capture runtime <em>per camera / day</em></label>
+            <input type="text" class="w3" id="tcA" value="00:00:00:00" spellcheck="false" inputmode="numeric"
+                   autocomplete="off" aria-label="Timecode: hours, minutes, seconds, frames"></span>
+        </div>
+        <div class="irow">
+          <span><label class="lbl" for="selCap">Capture codec</label>
+            <select class="m4" id="selCap">
+              <optgroup label="Constant bitrate">
+                <option value="b5">BRAW 5:1</option><option value="b8">BRAW 8:1</option>
+                <option value="b12" selected>BRAW 12:1</option><option value="b18">BRAW 18:1</option>
+              </optgroup>
+              <optgroup label="Constant quality">
+                <option value="q0">BRAW Q0</option><option value="q1">BRAW Q1</option>
+                <option value="q3">BRAW Q3</option><option value="q5">BRAW Q5</option>
+              </optgroup>
+            </select></span>
+          <span><label class="lbl" for="cams">Cameras</label><input type="number" class="w1" id="cams" min="1" step="1" value="1"></span>
+          <span><label class="lbl" for="days">Days</label><input type="number" class="w1" id="days" min="1" step="1" value="1"></span>
+          <span><label class="lbl" for="offmb">Offload <em>MB/s</em></label><input type="number" class="w2" id="offmb" min="1" step="10" value="1000"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="band">
+      <div class="bname">Dailies</div>
+      <div class="bfields">
+        <div class="irow">
+          <span><label class="lbl" for="selDai">Codec</label>
+            <select class="m4" id="selDai">
+              <option value="none">None</option>
+              <option value="proxy" selected>ProRes 422 Proxy</option>
+              <option value="lt">ProRes 422 LT</option><option value="422">ProRes 422</option>
+              <option value="hq">ProRes 422 HQ</option><option value="4444">ProRes 4444</option>
+              <option value="xq">ProRes 4444 XQ</option>
+            </select></span>
+          <span><label class="lbl" for="dres">Resolution</label>
+            <select class="m5" id="dres">
+              <option value="1">Full</option><option value="2" selected>Half</option>
+              <option value="4">Quarter</option>
+            </select></span>
+          <span class="sep"><label class="lbl" for="mvdbr">MV-HEVC <em>Mb/s</em></label><input type="number" class="w1" id="mvdbr" min="1" step="1" value="50"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="band">
+      <div class="bname">Post</div>
+      <div class="bfields">
+        <div class="irow">
+          <span><label class="lbl" for="tcB">Edit runtime</label>
+            <input type="text" class="w3" id="tcB" value="00:00:00:00" spellcheck="false" inputmode="numeric"
+                   autocomplete="off" aria-label="Timecode: hours, minutes, seconds, frames"></span>
+        </div>
+        <div class="irow">
+          <span><label class="lbl" for="selTrim">Trimmed BRAW</label>
+            <select class="m4" id="selTrim">
+              <option value="cap" selected>Capture codec</option>
+              <option value="none">None</option>
+            </select></span>
+          <span class="sep"><label class="lbl" for="trmb">Transfer <em>MB/s</em></label><input type="number" class="w2" id="trmb" min="1" step="10" value="1000"></span>
+        </div>
+        <div class="irow">
+          <span><label class="lbl" for="selPost">Denoise codec</label>
+            <select class="m4" id="selPost">
+              <option value="none">None</option>
+              <option value="proxy">ProRes 422 Proxy</option><option value="lt">ProRes 422 LT</option>
+              <option value="422">ProRes 422</option><option value="hq">ProRes 422 HQ</option>
+              <option value="4444" selected>ProRes 4444</option><option value="xq">ProRes 4444 XQ</option>
+            </select></span>
+        </div>
+        <div class="irow">
+          <span><label class="lbl" for="selDel">Delivery codec</label>
+            <select class="m4" id="selDel">
+              <option value="none" selected>None</option>
+              <option value="proxy">ProRes 422 Proxy</option><option value="lt">ProRes 422 LT</option>
+              <option value="422">ProRes 422</option><option value="hq">ProRes 422 HQ</option>
+              <option value="4444">ProRes 4444</option><option value="xq">ProRes 4444 XQ</option>
+            </select></span>
+          <span><label class="lbl" for="dlres">Resolution</label>
+            <select class="m3" id="dlres">
+              <option value="8160x7200">8160 × 7200</option>
+              <option value="4320x4320" selected>4320 × 4320</option>
+              <option value="2160x2160">2160 × 2160</option>
+              <option value="custom">Custom</option>
+            </select></span>
+          <span id="wrapDlw" hidden><label class="lbl" for="dlw">Width</label><input type="number" class="w2" id="dlw" min="1" step="1" value="4320"></span>
+          <span id="wrapDlh" hidden><label class="lbl" for="dlh">Height</label><input type="number" class="w2" id="dlh" min="1" step="1" value="4320"></span>
+        </div>
+        <div class="irow">
+          <span><span class="lbl">Codec</span><span class="m4 fixv">MV-HEVC</span></span>
+          <span><label class="lbl" for="mvbr">Bitrate <em>Mb/s</em></label><input type="number" class="w2" id="mvbr" min="1" step="1" value="100"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="band">
+      <div class="bname">Process</div>
+      <div class="bfields"><div class="irow">
+        <span><label class="lbl" for="prfps">ProRes <em>fps</em></label><input type="number" class="w1" id="prfps" min="0.0001" step="0.1" value="39"></span>
+        <span class="sep"><label class="lbl" for="mvfps">MV-HEVC <em>fps</em></label><input type="number" class="w1" id="mvfps" min="0.0001" step="0.1" value="35"></span>
+        <span><label class="lbl" for="dlfps">Delivery <em>fps</em></label><input type="number" class="w1" id="dlfps" min="0.0001" step="0.1" value=""></span>
+        <span><label class="lbl" for="dspeed">Denoise <em>fps</em></label><input type="number" class="w1" id="dspeed" min="0.0001" step="0.1" value="1.5"></span>
+        <span><label class="lbl" for="dmode">Render</label>
+          <select class="m2" id="dmode"><option value="stereo" selected>Stereo</option><option value="mono">Mono</option></select></span>
+        <span><label class="lbl" for="shots">Shots</label><input type="number" class="w1" id="shots" min="0" step="1" value=""></span>
+        <span><label class="lbl" for="handles">Handles <em>fr / side</em></label><input type="number" class="w1" id="handles" min="0" step="1" value=""></span>
+        <span><label class="lbl" for="nodes">Nodes</label><input type="number" class="w1" id="nodes" min="1" step="1" value=""></span>
+      </div></div>
+    </div>
+
+    <div class="band">
+      <div class="bname">Cost</div>
+      <div class="bfields"><div class="irow">
+        <span><label class="lbl" for="costTb">Storage <em>$ / TB</em></label><input type="number" class="w1" id="costTb" min="0" step="1" value="20"></span>
+        <span><label class="lbl" for="costHr">Render <em>$ / node hr</em></label><input type="number" class="w1" id="costHr" min="0" step="1" value="5"></span>
+      </div></div>
+    </div>
+
+    <div class="strip">
+      <div class="fmt" id="fmtBar"></div>
+      <div class="tools">
+        <input type="text" id="shareOut" readonly hidden aria-label="Estimate link">
+        <button type="button" id="share">Copy link</button>
+        <button type="button" id="reset">Reset</button>
+        <div class="unit" role="group" aria-label="Detail columns">
+          <button type="button" id="detTog" aria-pressed="true">Detail</button>
+        </div>
+        <div class="unit" role="group" aria-label="Rate unit">
+          <button type="button" id="uGb" aria-pressed="false">Gb/s</button>
+          <button type="button" id="uMB" aria-pressed="true">MB/s</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="nm">Capture <em id="hCap"></em></span><button type="button" class="tog" data-k="cap" aria-expanded="false"></button></h2>
+    <div class="scroll"><table><colgroup><col style="width:20%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:14%"><col style="width:13%"></colgroup><thead id="thCap"></thead><tbody id="tCap" data-key="cap" data-sel="selCap"></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="nm">Dailies <em id="hDai"></em></span><button type="button" class="tog" data-k="dai" aria-expanded="false"></button></h2>
+    <div class="scroll"><table><colgroup><col style="width:20%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:14%"><col style="width:13%"></colgroup><thead id="thDai"></thead><tbody id="tDai" data-key="dai" data-sel="selDai"></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="nm">Trimmed BRAW <em id="hTrm"></em></span></h2>
+    <div class="scroll"><table><colgroup><col style="width:20%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:14%"><col style="width:13%"></colgroup><thead id="thTrm"></thead><tbody id="tTrm"></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="nm">Denoise <em id="hPost"></em></span><button type="button" class="tog" data-k="post" aria-expanded="false"></button></h2>
+    <div class="scroll"><table><colgroup><col style="width:20%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:14%"><col style="width:13%"></colgroup><thead id="thPost"></thead><tbody id="tPost" data-key="post" data-sel="selPost"></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="nm">Delivery <em id="hDel"></em></span><button type="button" class="tog" data-k="del" aria-expanded="false"></button></h2>
+    <div class="scroll"><table><colgroup><col style="width:20%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:14%"><col style="width:13%"></colgroup><thead id="thDel"></thead><tbody id="tDel" data-key="del" data-sel="selDel"></tbody></table></div>
+  </div>
+
+  <div class="panel" id="total">
+    <h2><span class="nm">Total</span></h2>
+    <div class="mx">
+      <div class="lead"><span class="lbl">Data</span><div class="v big" id="tData"></div></div>
+      <div class="lead"><span class="lbl">Total render hours</span><div class="v big" id="tNodeHr"></div></div>
+    </div>
+    <div class="mx sub">
+      <div><span class="lbl">Capture</span><div class="v" id="tCapV"></div></div>
+      <div><span class="lbl">Dailies</span><div class="v" id="tDaiV"></div></div>
+      <div><span class="lbl">Trim</span><div class="v" id="tTrmV"></div></div>
+      <div><span class="lbl">Denoise</span><div class="v" id="tPostV"></div></div>
+      <div><span class="lbl">Delivery</span><div class="v" id="tDelV"></div></div>
+      <div><span class="lbl">Denoise hours</span><div class="v" id="tDnHr"></div></div>
+    </div>
+    <div class="mx sub">
+      <div><span class="lbl">Storage $</span><div class="v" id="tStor"></div></div>
+      <div><span class="lbl">Render $</span><div class="v" id="tRend"></div></div>
+      <div class="lead"><span class="lbl">Cost</span><div class="v big" id="tCost"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="dock">
+  <div><b>Data</b><span id="dData"></span></div>
+  <div><b>Cost</b><span id="dCost"></span></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(i){ return document.getElementById(i); };
+  var unit = "MB";
+  var lean = false;                              // detail columns folded away
+  var open = { cap:false, dai:false, post:false, del:false };
+
+  var PRORES_PPS = 1920 * 1080 * (30000/1001);
+  var BRAW_PPS   = 2 * 8160 * 7200 * 90;
+  var FPS = { "23.98":24000/1001, "24":24, "25":25, "29.97":30000/1001, "30":30,
+              "50":50, "59.94":60000/1001, "60":60, "90":90 };
+
+  var CAPTURE = [
+    {grp:"Constant bitrate"},
+    {id:"b5",  name:"BRAW 5:1",  MBps:3203},
+    {id:"b8",  name:"BRAW 8:1",  MBps:2002},
+    {id:"b12", name:"BRAW 12:1", MBps:1335},
+    {id:"b18", name:"BRAW 18:1", MBps:889},
+    {grp:"Constant quality"},
+    {id:"q0", name:"BRAW Q0", MBps:1779, MBpsHi:4003},
+    {id:"q1", name:"BRAW Q1", MBps:1456, MBpsHi:3558},
+    {id:"q3", name:"BRAW Q3", MBps:801,  MBpsHi:2002},
+    {id:"q5", name:"BRAW Q5", MBps:534,  MBpsHi:1602}
+  ];
+  var PR = [
+    {id:"proxy", name:"ProRes 422 Proxy", mb:45},
+    {id:"lt",    name:"ProRes 422 LT",    mb:102},
+    {id:"422",   name:"ProRes 422",       mb:147},
+    {id:"hq",    name:"ProRes 422 HQ",    mb:220},
+    {id:"4444",  name:"ProRes 4444",      mb:330},
+    {id:"xq",    name:"ProRes 4444 XQ",   mb:500}
+  ];
+  var NONE = {id:"none", name:"None", kind:"none"};
+  var DEL_MV = {id:"mvhevc", name:"MV-HEVC", kind:"fixed", br:"mvbr"};
+  var DEL = null;   // built after NONE exists
+  var DAI_MV = { id:"mvdai", name:"MV-HEVC", kind:"fixed", br:"mvdbr" };
+
+  CAPTURE.forEach(function(c){
+    if (!c.id) return;
+    c.kind = "braw";
+    c.Bpp   = c.MBps * 1e6 / BRAW_PPS;
+    c.BppHi = c.MBpsHi ? c.MBpsHi * 1e6 / BRAW_PPS : null;
+  });
+  PR.forEach(function(c){ c.kind = "pr"; c.bpp = c.mb * 1e6 / PRORES_PPS; });
+  var DAI_LIST = [NONE].concat(PR);
+  var PST = [NONE].concat(PR);
+  DEL = [NONE].concat(PR);
+  var BY = {};
+  CAPTURE.concat(PR, [DEL_MV, DAI_MV, NONE]).forEach(function(c){ if (c.id) BY[c.id] = c; });
+
+  /* ---- formatting ---- */
+  function num(v,d){
+    return isFinite(v)
+      ? v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false})
+      : "—";
+  }
+  function sig(v){
+    if (!isFinite(v)) return "—";
+    var a = Math.abs(v);
+    if (a >= 1000) return num(v,0);
+    if (a >= 10)   return num(v,1);
+    if (a >= 1)    return num(v,2);
+    return num(v,3);
+  }
+  function bytes(b){
+    if (!isFinite(b) || b < 0) return "—";
+    if (b === 0) return "0 GB";
+    if (b >= 1e12) return sig(b/1e12) + " TB";
+    if (b >= 1e9)  return sig(b/1e9)  + " GB";
+    if (b >= 1e6)  return sig(b/1e6)  + " MB";
+    return sig(b/1e3) + " kB";
+  }
+  var LAD3 = [{d:1e3,u:"kB"},{d:1e6,u:"MB"},{d:1e9,u:"GB"},{d:1e12,u:"TB"},{d:1e15,u:"PB"}];
+  function cell3(lo, hi){
+    if (!(hi > 0)) return '<span class="n">—</span>';
+    var i = 0;
+    while (i < LAD3.length-1 && hi >= LAD3[i+1].d) i++;
+    var u = LAD3[i], sc = hi/u.d;
+    var d = sc >= 100 ? 0 : (sc >= 10 ? 1 : 2);
+    var n = (lo === hi) ? num(sc,d) : num(lo/u.d,d) + " – " + num(sc,d);
+    return '<span class="n">' + n + '</span><span class="u">' + u.u + '</span>';
+  }
+  var BIT  = [{d:1e3,u:"kb/s"},{d:1e6,u:"Mb/s"},{d:1e9,u:"Gb/s"},{d:1e12,u:"Tb/s"}];
+  var BYTE = [{d:1e3,u:"kB/s"},{d:1e6,u:"MB/s"},{d:1e9,u:"GB/s"},{d:1e12,u:"TB/s"}];
+  function rate3(loBps, hiBps, pinMb){
+    if (!(hiBps > 0)) return '<span class="n">—</span>';
+    var lad, lo, hi, u;
+    if (pinMb){ lad = BIT; lo = loBps*8; hi = hiBps*8; u = BIT[1]; }
+    else {
+      lad = unit === "Gb" ? BIT : BYTE;
+      var k = unit === "Gb" ? 8 : 1;
+      lo = loBps*k; hi = hiBps*k;
+      var i = 0;
+      while (i < lad.length-1 && hi >= lad[i+1].d) i++;
+      u = lad[i];
+    }
+    var sc = hi/u.d;
+    var d = sc >= 100 ? 0 : (sc >= 10 ? 1 : 2);
+    var n = (loBps === hiBps) ? num(sc,d) : num(lo/u.d,d) + " – " + num(sc,d);
+    return '<span class="n">' + n + '</span><span class="u">' + u.u + '</span>';
+  }
+  function hms(s){
+    if (!isFinite(s) || s < 0) return "—";
+    var t = Math.floor(s + 0.5), d = Math.floor(t/86400);
+    var h = Math.floor((t - d*86400)/3600), m = Math.floor((t%3600)/60), x = t%60;
+    var p = function(v){ return (v<10?"0":"")+v; };
+    // past a day the hour count stops reading as a duration
+    return (d ? d + "d " : "") + p(d ? h : Math.floor(t/3600)) + ":" + p(m) + ":" + p(x);
+  }
+  // a zero-length render reads as a dash, never 00:00:00
+  function hms0(s){ return (isFinite(s) && s >= 0.5) ? hms(s) : "—"; }
+  function tcStr(fr, fps){
+    if (!isFinite(fr) || fr < 0) return "00:00:00:00";
+    var F = Math.max(1, Math.round(fps)), f = Math.round(fr);
+    var h = Math.floor(f/(3600*F)); f -= h*3600*F;
+    var m = Math.floor(f/(60*F));   f -= m*60*F;
+    var s = Math.floor(f/F);        f -= s*F;
+    var p = function(v){ return (v<10?"0":"")+v; };
+    return p(h)+":"+p(m)+":"+p(s)+":"+p(f);
+  }
+  function money(v){ return isFinite(v) ? "$" + num(v, v >= 100 ? 0 : 2) : "—"; }
+  function rng(lo,hi,fn){ return lo === hi ? fn(lo) : fn(lo) + " – " + fn(hi); }
+  function res(w,h){ return w + " × " + h; }
+  function fpsLabel(){
+    var k = $("fps").value;
+    if (k !== "custom") return k;
+    return String(Math.round(Math.max(0.001, n($("cfps"),90))*1000)/1000);
+  }
+
+  function n(el,d){ var v = parseFloat(el.value); return isFinite(v) ? v : d; }
+  function speed(id){ var v = parseFloat($(id).value); return (isFinite(v) && v > 0) ? v : NaN; }
+  function nz(v){ return isFinite(v) ? v : 0; }
+  function fpsNow(){
+    var k = $("fps").value;
+    return k === "custom" ? Math.max(0.001, n($("cfps"),90)) : FPS[k];
+  }
+  function master(){
+    var w = Math.max(1, n($("cw"),8160)), h = Math.max(1, n($("ch"),7200));
+    return { w:w, h:h, fps:fpsNow(), pix:2*w*h };
+  }
+  // delivery formats: ProRes and MV-HEVC each carry their own raster
+  function pickRes(sel, wId, hId, M){
+    var v = $(sel).value, w, h;
+    if (v === "custom"){ w = Math.max(1,n($(wId),4320)); h = Math.max(1,n($(hId),4320)); }
+    else { var q = v.split("x"); w = +q[0]; h = +q[1]; }
+    return { w:w, h:h, fps:M.fps, pix:2*w*h };
+  }
+  function daiRes(M){
+    var d = Math.max(1, parseFloat($("dres").value) || 2);
+    var w = Math.max(1, Math.round(M.w/d)), h = Math.max(1, Math.round(M.h/d));
+    return { w:w, h:h, fps:M.fps, pix:2*w*h, div:d };
+  }
+  function rates(c,f){
+    if (!c || c.kind === "none") return {lo:0,hi:0};
+    // blank or zero bitrate means the stream is not made at all
+    if (c.kind === "fixed"){ var b = Math.max(0, n($(c.br),0))*1e6/8; return {lo:b,hi:b}; }
+    if (c.kind === "pr"){ var v = c.bpp * f.pix * f.fps / 8; return {lo:v,hi:v}; }
+    var lo = c.Bpp * f.pix * f.fps;
+    return { lo:lo, hi: c.BppHi ? c.BppHi * f.pix * f.fps : lo };
+  }
+
+  /* ---- timecode: one field, NLE-style entry, paste-safe ---- */
+  function tcToFrames(v, fps){
+    var F = Math.max(1, Math.round(fps));
+    var q = String(v).split(":").map(function(x){ return parseInt(x,10) || 0; });
+    while (q.length < 4) q.unshift(0);          // right-align partials: "10:00" is sec:frames
+    q = q.slice(-4);
+    return q[0]*3600*F + q[1]*60*F + q[2]*F + q[3];
+  }
+  function digitsToTc(d){
+    d = String(d).replace(/\D/g,"").slice(-8);
+    while (d.length < 8) d = "0" + d;
+    return d.slice(0,2)+":"+d.slice(2,4)+":"+d.slice(4,6)+":"+d.slice(6,8);
+  }
+  function tidy(sfx, fps){
+    $("tc"+sfx).value = tcStr(tcToFrames($("tc"+sfx).value, fps), fps);
+  }
+  function secsOf(sfx, fps){ return tcToFrames($("tc"+sfx).value, fps) / fps; }
+
+  // caret-addressable pairs: click a segment and overwrite it in place
+  var POS = [0,1,3,4,6,7,9,10];                  // editable char slots in HH:MM:SS:FF
+  var WEIGHT = [3600, 60, 1, 0];                 // seconds per unit; frames handled separately
+  function slotAt(i){
+    for (var k = 0; k < POS.length; k++) if (POS[k] >= i) return POS[k];
+    return POS[POS.length-1];
+  }
+  function segIndex(i){ return i <= 1 ? 0 : i <= 4 ? 1 : i <= 7 ? 2 : 3; }
+  function place(el, i){ try{ el.setSelectionRange(i, i+1); }catch(e){} }
+
+  function wireTc(sfx){
+    var el = $("tc"+sfx);
+
+    function caret(){ return slotAt(el.selectionStart || 0); }
+    function commit(fps){ tidy(sfx, fps); render(); }
+
+    el.addEventListener("focus", function(){
+      setTimeout(function(){ place(el, caret()); }, 0);
+    });
+    el.addEventListener("mouseup", function(){
+      setTimeout(function(){ place(el, caret()); }, 0);
+    });
+
+    el.addEventListener("keydown", function(e){
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var fps = fpsNow(), F = Math.max(1, Math.round(fps)), i = caret(), k = POS.indexOf(i);
+
+      if (e.key >= "0" && e.key <= "9"){
+        e.preventDefault();
+        var v = el.value.split("");
+        v[i] = e.key;
+        el.value = v.join("");
+        place(el, POS[Math.min(k + 1, POS.length - 1)]);
+        render();
+      } else if (e.key === "Backspace"){
+        e.preventDefault();
+        var w = el.value.split("");
+        w[i] = "0";
+        el.value = w.join("");
+        place(el, POS[Math.max(k - 1, 0)]);
+        render();
+      } else if (e.key === "ArrowLeft"){
+        e.preventDefault(); place(el, POS[Math.max(k - 1, 0)]);
+      } else if (e.key === "ArrowRight"){
+        e.preventDefault(); place(el, POS[Math.min(k + 1, POS.length - 1)]);
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown"){
+        e.preventDefault();
+        var seg  = segIndex(i);
+        var step = (seg === 3 ? 1 : WEIGHT[seg] * F) * (e.shiftKey ? 10 : 1);
+        var fr   = tcToFrames(el.value, fps) + (e.key === "ArrowUp" ? step : -step);
+        el.value = tcStr(Math.max(0, fr), fps);
+        place(el, i); render();
+      } else if (e.key === "Enter"){
+        commit(fps); place(el, i);
+      } else if (e.key !== "Tab" && e.key.length === 1){
+        e.preventDefault();                       // block stray characters
+      }
+    });
+
+    el.addEventListener("paste", function(e){
+      e.preventDefault();
+      var txt = ((e.clipboardData || window.clipboardData).getData("text") || "").trim();
+      var fps = fpsNow();
+      el.value = txt.indexOf(":") >= 0
+        ? tcStr(tcToFrames(txt, fps), fps)                // colons: right-align the parts
+        : tcStr(tcToFrames(digitsToTc(txt), fps), fps);   // bare digits: right-align as pairs
+      render(); place(el, POS[0]);
+    });
+
+    el.addEventListener("blur", function(){ commit(fpsNow()); });
+  }
+
+  /* ---- matrices ---- */
+  function collect(set){
+    var seq = [];
+    function add(x, fmt, fixed){
+      var r = rates(x, fmt || set.f);
+      return { id:x.id, name:x.name, r:r, fixed:!!fixed, pin:(x.kind === "fixed"), none:(x.kind === "none"),
+               procOv:null, rendOv:null,
+               szLo:r.lo*set.secs, szHi:r.hi*set.secs,
+               rLo:r.lo, rHi:r.hi, phLo:r.lo*3600, phHi:r.hi*3600 };
+    }
+    set.list.forEach(function(x){ seq.push(x.grp ? {grp:x.grp} : add(x)); });
+    if (set.tail) set.tail.forEach(function(t){
+      if (t.grp){ seq.push({grp:t.grp}); return; }
+      var d = add(t.codec, t.fmt, true);
+      if (t.proc != null) d.procOv = t.proc;
+      if (t.rend != null) d.rendOv = t.rend;
+      seq.push(d);
+    });
+    return seq;
+  }
+
+  function emit(set){
+    var hidden = 0, shown = 0;
+
+    // the four detail columns fold away, leaving codec + the two totals
+    var head = $(set.th), tbl = head.parentNode, cg = tbl.querySelector("colgroup");
+    var w = lean ? [34,33,33] : [20,13,13,14,13,14,13];
+    cg.innerHTML = w.map(function(x){ return '<col style="width:' + x + '%">'; }).join("");
+    tbl.className = lean ? "lean" : "";
+
+    head.innerHTML =
+      '<tr><th scope="col">Codec</th>'
+      + (lean ? "" :
+           '<th scope="col">Rate</th>'
+         + '<th scope="col">Data / hr</th>'
+         + '<th scope="col">Runtime / TB</th>'
+         + '<th scope="col">' + set.rendHdr + '</th>')
+      + '<th scope="col" class="tot">Data total</th>'
+      + '<th scope="col" class="tot">' + set.lastHdr + '</th></tr>';
+
+    $(set.tb).innerHTML = set.seq.map(function(d){
+      if (d.grp) return set.open
+        ? '<tr class="grp"><td colspan="' + (lean ? 3 : 7) + '">' + d.grp + '</td></tr>' : "";
+      var on = d.id === set.cur || d.fixed;
+      if (!set.open && !on){ hidden++; return ""; }
+      var alt = (shown++ % 2) ? " alt" : "";
+      var attr = (set.sel && !d.fixed)
+        ? ' class="pick' + (on ? " on" : "") + alt + '" data-id="' + d.id + '" tabindex="0"'
+        : ' class="' + (on ? "on" : "") + alt + '"';
+
+      // how much runtime one TB holds, on every stage now
+      var perTb = d.r.hi > 0
+        ? (d.r.lo === d.r.hi ? hms(1e12/d.r.hi) : hms(1e12/d.r.hi) + " – " + hms(1e12/d.r.lo))
+        : "—";
+      var last, rend;
+      if (set.rec){
+        rend = hms0(d.phHi / set.offBps);          // offload one hour of this codec
+        last = hms0(d.szHi / set.offBps);          // offload everything shot on it
+      } else {
+        last = d.none ? "—" : hms0(d.procOv != null ? d.procOv : set.proc);
+        rend = d.none ? "—" : hms0(d.rendOv != null ? d.rendOv : set.rend);
+      }
+      return '<tr' + attr + '>'
+        + '<td>' + d.name + '</td>'
+        + (lean ? "" :
+             '<td>' + rate3(d.rLo, d.rHi, d.pin) + '</td>'
+           + '<td>' + cell3(d.phLo, d.phHi) + '</td>'
+           + '<td>' + perTb + '</td>'
+           + '<td>' + rend + '</td>')
+        + '<td class="tot">' + cell3(d.szLo, d.szHi) + '</td>'
+        + '<td class="tot">' + last + '</td></tr>';
+    }).join("");
+    return hidden;
+  }
+
+  function setTog(k, count){
+    var btn = document.querySelector('.tog[data-k="' + k + '"]');
+    if (!btn) return;
+    btn.textContent = open[k] ? "Hide" : "+" + count;
+    btn.setAttribute("aria-expanded", open[k] ? "true" : "false");
+  }
+
+  /* ---- main ---- */
+  function render(){
+    $("wrapFps").hidden = $("fps").value !== "custom";
+
+    var fps = fpsNow();
+    var M  = master(), DP = daiRes(M);
+    var cams = Math.max(1, Math.round(n($("cams"),1)));
+    var days = Math.max(1, Math.round(n($("days"),1)));
+    var mult = cams * days;
+
+    var secUnit = secsOf("A", fps);
+    var secA = secUnit * mult, secB = secsOf("B", fps);
+    var frA = secA*fps, frB = secB*fps;
+
+    var lab = ["Full","Half","Quarter"], div = [1,2,4];
+    Array.prototype.forEach.call($("dres").options, function(o,i){
+      o.text = lab[i] + " — " + res(Math.max(1,Math.round(M.w/div[i])), Math.max(1,Math.round(M.h/div[i])));
+    });
+
+    $("fmtBar").innerHTML = res(M.w,M.h) + " <em>×2</em> @ " + fpsLabel()
+      + " fps <em>— capture " + hms(secUnit)
+      + (mult > 1 ? " ×" + mult + " = " + hms(secA) : "")
+      + " · post " + hms(secB) + "</em>";
+
+    // speeds
+    var DL = pickRes("dlres","dlw","dlh", M);
+    $("wrapDlw").hidden = $("wrapDlh").hidden = $("dlres").value !== "custom";
+
+    // denoise renders the cut plus handles at both ends of every shot
+    var shots   = Math.max(0, Math.round(n($("shots"),0)));
+    var handles = Math.max(0, Math.round(n($("handles"),0)));
+    var extraFr = shots * handles * 2;
+    var frDn    = frB + extraFr;
+    var secDn   = frDn / fps;
+
+    // a blank speed means the render time is unknown: that row dashes, totals skip it
+    var prF   = speed("prfps"), mvF = speed("mvfps"), dlF = speed("dlfps"), sp = speed("dspeed");
+    var mono  = $("dmode").value === "mono";
+    var nodes = Math.max(1, Math.round(n($("nodes"),1)));
+    var offBps = Math.max(1, n($("offmb"),1000)) * 1e6;
+    var trBps  = Math.max(1, n($("trmb"),1000)) * 1e6;   // trimmed negative hand-off
+
+    // node-seconds of compute, then wall clock across the farm
+    var noDai = $("selDai").value === "none";   // ProRes master off; MV-HEVC still made
+
+    // the matrices always show what a codec WOULD cost; only the totals drop
+    // the dailies stage when it is switched off
+    var noDel = $("selDel").value === "none";      // ProRes master is optional
+    // a blank or zero bitrate means that MV-HEVC is not made, so it renders nothing
+    var mvdBr = Math.max(0, n($("mvdbr"),0)), mvBr = Math.max(0, n($("mvbr"),0));
+    var noDaiMv = !(mvdBr > 0), noDelMv = !(mvBr > 0);
+    var cPr = frA / prF, cMv = frA / mvF,
+        cDn = (frDn/sp)*(mono?2:1),
+        cDlPr = frB / dlF, cDlMv = frB / dlF;
+    var noPost = $("selPost").value === "none";    // no denoise pass at all
+    var nodeSec = (noDai ? 0 : nz(cPr)) + (noDaiMv ? 0 : nz(cMv)) + (noPost ? 0 : nz(cDn))
+                + (noDel ? 0 : nz(cDlPr)) + (noDelMv ? 0 : nz(cDlMv));
+    var tPr = cPr/nodes, tMv = cMv/nodes, dn = cDn/nodes,
+        tDlPr = cDlPr/nodes, tDlMv = cDlMv/nodes;
+
+    var hrF = 3600*fps, minF = 60*fps;
+    var rPr = (hrF/prF)/nodes, rMv = (hrF/mvF)/nodes;
+    var rDn = (minF*(mono?2:1)/sp)/nodes, rDl = (hrF/dlF)/nodes;
+
+    var idCap = $("selCap").value, idDai = $("selDai").value,
+        idPost = $("selPost").value, idDel = $("selDel").value;
+
+    // the trimmed negative is the capture codec, cut down to the conform plus handles
+    var noTrim = $("selTrim").value === "none";
+    $("selTrim").options[0].text = BY[idCap].name;
+
+    var sets = [
+      {th:"thCap", tb:"tCap", list:CAPTURE, f:M,  secs:secA, sel:"selCap", cur:idCap, open:open.cap,
+       rec:true, offBps:offBps, rendHdr:"Offload / hr", lastHdr:"Offload total"},
+      {th:"thDai", tb:"tDai", list:DAI_LIST, f:DP, secs:secA, sel:"selDai", cur:idDai, open:open.dai,
+       proc:tPr, rend:rPr, rendHdr:"Render / hr", lastHdr:"Render total",
+       tail:[{grp:"MV-HEVC — " + (noDaiMv ? "none" : sig(mvdBr) + " Mb/s")},
+             {codec:DAI_MV, fmt:DP, proc:noDaiMv ? 0 : tMv, rend:noDaiMv ? 0 : rMv}]},
+      {th:"thTrm", tb:"tTrm", list:[], f:M, secs:secDn, sel:null, cur:null, open:false,
+       rec:true, offBps:trBps, rendHdr:"Transfer / hr", lastHdr:"Transfer total",
+       tail:[{codec: noTrim ? NONE : BY[idCap], fmt:M}]},
+      {th:"thPost", tb:"tPost", list:PST, f:M, secs:secDn, sel:"selPost", cur:idPost, open:open.post,
+       proc:dn, rend:rDn, rendHdr:"Render / min", lastHdr:"Render total"},
+      {th:"thDel", tb:"tDel", list:DEL, f:DL, secs:secB, sel:"selDel", cur:idDel, open:open.del,
+       proc:tDlPr, rend:rDl, rendHdr:"Render / hr", lastHdr:"Render total",
+       tail:[{grp:"MV-HEVC — " + (noDelMv ? "none" : sig(mvBr) + " Mb/s")},
+             {codec:DEL_MV, fmt:DL, proc:noDelMv ? 0 : tDlMv, rend:noDelMv ? 0 : rDl}]}
+    ];
+    var keys = ["cap","dai","trm","post","del"];
+    sets.forEach(function(st, i){ st.seq = collect(st); setTog(keys[i], emit(st)); });
+
+    var rc  = rates(BY[idCap],  M), rdp = rates(BY[idDai], DP),
+        rdm = rates(DAI_MV, DP),    rp  = rates(BY[idPost], M),
+        rdPr = rates(BY[idDel], DL), rdMv = rates(DEL_MV, DL);
+
+    $("hCap").textContent  = "— " + BY[idCap].name + " · " + hms(secA);
+    var nmDai = [noDai ? null : BY[idDai].name, noDaiMv ? null : "MV-HEVC"]
+      .filter(Boolean).join(" + ") || "none";
+    $("hDai").textContent  = "— " + nmDai + " · " + res(DP.w,DP.h) + " · " + hms(secA);
+    $("hTrm").textContent  = "— " + (noTrim ? "none" : BY[idCap].name) + " · "
+      + Math.round(frDn) + " fr" + (extraFr ? " (+" + extraFr + " handles)" : "") + " · " + hms(secDn);
+    $("hPost").textContent = noPost ? "— none"
+      : "— " + BY[idPost].name + " · " + (mono ? "Mono" : "Stereo") + " · "
+        + Math.round(frDn) + " fr" + (extraFr ? " (+" + extraFr + " handles)" : "") + " · " + hms(secDn);
+    var nmDel = [noDel ? null : BY[idDel].name, noDelMv ? null : "MV-HEVC"]
+      .filter(Boolean).join(" + ") || "none";
+    $("hDel").textContent  = "— " + nmDel + " · " + res(DL.w,DL.h) + " · " + hms(secB);
+
+    var szC  = {lo: rc.lo*secA, hi: rc.hi*secA};
+    var szDa = {lo:(rdp.lo+rdm.lo)*secA, hi:(rdp.hi+rdm.hi)*secA};
+    var szT  = {lo: noTrim ? 0 : rc.lo*secDn, hi: noTrim ? 0 : rc.hi*secDn};
+    var szP  = {lo: rp.lo*secDn, hi: rp.hi*secDn};
+    var szD  = {lo:(rdPr.lo+rdMv.lo)*secB, hi:(rdPr.hi+rdMv.hi)*secB};
+    var tLo = szC.lo+szDa.lo+szT.lo+szP.lo+szD.lo,
+        tHi = szC.hi+szDa.hi+szT.hi+szP.hi+szD.hi;
+
+    var nodeHrs  = nodeSec / 3600;          // every render step, in node-hours
+    var dnHrs    = noPost ? 0 : cDn / 3600; // the denoise pass alone
+    var storage$ = (tHi/1e12) * Math.max(0, n($("costTb"),0));
+    var render$  = nodeHrs * Math.max(0, n($("costHr"),0));
+
+    $("tData").innerHTML   = rng(tLo, tHi, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>');
+    $("tCost").textContent = money(storage$ + render$);
+    $("tCapV").textContent  = rng(szC.lo,  szC.hi,  bytes);
+    $("tDaiV").textContent  = rng(szDa.lo, szDa.hi, bytes);
+    $("tTrmV").textContent  = rng(szT.lo,  szT.hi,  bytes);
+    $("tPostV").textContent = rng(szP.lo,  szP.hi,  bytes);
+    $("tDelV").textContent  = rng(szD.lo,  szD.hi,  bytes);
+    $("tNodeHr").textContent = num(nodeHrs, nodeHrs >= 100 ? 0 : 1);
+    $("tDnHr").textContent   = num(dnHrs,   dnHrs   >= 100 ? 0 : 1);
+    $("tStor").textContent   = money(storage$);
+    $("tRend").textContent   = money(render$);
+
+    $("dData").innerHTML   = rng(tLo, tHi, bytes).replace(/(TB|GB|MB|kB)/g, '<em>$1</em>');
+    $("dCost").textContent = money(storage$ + render$);
+
+    writeHash();
+    fitFrame();
+  }
+
+  /* ---- the estimate lives in the URL, so an estimate is a link ---- */
+  var FIELDS = ["res","cw","ch","fps","cfps","cams","days","offmb",
+                "tcA","tcB",
+                "selCap","selDai","dres","mvdbr","selTrim","trmb","selPost","selDel","mvbr",
+                "prfps","mvfps","dlfps","dspeed","dmode","shots","handles","nodes","costTb","costHr",
+                "dlres","dlw","dlh"];
+  var DEF = {};
+  FIELDS.forEach(function(id){ DEF[id] = $(id).value; });
+
+  // embed mode: the website's pointer loads this page in a frame from another origin and
+  // passes its own address as ?embed=. Links then point at the website, not at this copy.
+  var EMBED = null;
+  try{
+    var em = new URLSearchParams(location.search).get("embed");
+    if (em && /^https?:\/\//i.test(em)) EMBED = em.split("#")[0];
+  }catch(e){}
+  if (EMBED) document.documentElement.className += " embedded";
+  function tell(msg){
+    if (!EMBED) return;
+    try{ window.parent.postMessage(msg, new URL(EMBED).origin); }catch(e){}
+  }
+  function fitFrame(){
+    var w = document.querySelector(".wrap");
+    if (w) tell({type:"idrc-height", h: Math.ceil(w.getBoundingClientRect().bottom) + 6});
+  }
+  if (EMBED){
+    window.addEventListener("resize", fitFrame);
+    if (window.ResizeObserver) new ResizeObserver(fitFrame).observe(document.querySelector(".wrap"));
+  }
+
+  // same-origin frame (old srcdoc embed): the page URL is the parent's
+  function hostWin(){
+    if (EMBED) return window;
+    try{ if (window.parent !== window && window.parent.location.href) return window.parent; }catch(e){}
+    return window;
+  }
+  function encodeState(){
+    var q = [];
+    FIELDS.forEach(function(id){
+      var v = $(id).value;
+      if (v !== DEF[id]) q.push(id + "=" + encodeURIComponent(v).replace(/%3A/g, ":"));
+    });
+    if (unit !== "MB") q.push("u=" + unit);
+    if (lean) q.push("lean=1");
+    return q.join("&");
+  }
+  function writeHash(){
+    var w = hostWin(), st = encodeState();
+    try{
+      var base = w.location.href.split("#")[0];
+      w.history.replaceState(w.history.state, "", st ? base + "#" + st : base);
+    }catch(e){}
+    tell({type:"idrc-hash", hash: st});
+  }
+  function readHash(){
+    var h = "";
+    try{ h = hostWin().location.hash.replace(/^#/, ""); }catch(e){}
+    if (!h) return;
+    h.split("&").forEach(function(kv){
+      var i = kv.indexOf("="); if (i < 1) return;
+      var k = kv.slice(0, i), v;
+      try{ v = decodeURIComponent(kv.slice(i + 1)); }catch(e){ return; }
+      if (FIELDS.indexOf(k) >= 0) $(k).value = v;
+      else if (k === "u" && (v === "Gb" || v === "MB")) unit = v;
+      else if (k === "lean") lean = (v === "1");
+    });
+  }
+  function shareUrl(){
+    writeHash();
+    if (EMBED){ var st = encodeState(); return st ? EMBED + "#" + st : EMBED; }
+    try{ return hostWin().location.href; }catch(e){ return location.href; }
+  }
+
+  $("share").addEventListener("click", function(){
+    var url = shareUrl(), btn = this, out = $("shareOut");
+    function said(t){ btn.textContent = t; setTimeout(function(){ btn.textContent = "Copy link"; }, 1600); }
+    function manual(){
+      // no clipboard access: put the link where it can be copied by hand
+      out.hidden = false; out.value = url; out.focus(); out.select();
+      var ok = false; try{ ok = document.execCommand("copy"); }catch(e){}
+      said(ok ? "Copied" : "Select + copy");
+    }
+    out.hidden = true;
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ said("Copied"); }, manual);
+    } else manual();
+  });
+  $("reset").addEventListener("click", function(){
+    FIELDS.forEach(function(id){ $(id).value = DEF[id]; });
+    unit = "MB"; lean = false;
+    Object.keys(open).forEach(function(k){ open[k] = false; });
+    $("shareOut").hidden = true;
+    $("uGb").setAttribute("aria-pressed", "false");
+    $("uMB").setAttribute("aria-pressed", "true");
+    $("detTog").setAttribute("aria-pressed", "true");
+    render();
+  });
+
+  /* ---- row picking: a collapsed section opens on click, then a row picks and closes ---- */
+  function act(tbody, target){
+    var k = tbody.getAttribute("data-key");
+    var tr = target.closest ? target.closest("tr.pick") : null;
+    if (!tr || !tbody.contains(tr)) return false;             // MV-HEVC and group rows are inert
+    if (!open[k]){ open[k] = true; render(); return true; }   // closed: reveal the alternatives
+    $(tbody.getAttribute("data-sel")).value = tr.getAttribute("data-id");
+    open[k] = false;                                          // chosen: fold back up
+    render();
+    return true;
+  }
+  ["tCap","tDai","tPost","tDel"].forEach(function(id){
+    var tb = $(id);
+    tb.addEventListener("click", function(e){ act(tb, e.target); });
+    tb.addEventListener("keydown", function(e){
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
+        if (act(tb, e.target)) e.preventDefault();
+      }
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".tog"), function(btn){
+    btn.addEventListener("click", function(){
+      open[this.getAttribute("data-k")] = !open[this.getAttribute("data-k")];
+      render();
+    });
+  });
+
+  /* ---- wiring ---- */
+  ["cw","ch","fps","cfps","cams","days","offmb","dres","mvbr","mvdbr",
+   "prfps","mvfps","dlfps","dspeed","dmode","shots","handles","nodes","costTb","costHr",
+   "dlres","dlw","dlh","trmb","selCap","selDai","selTrim","selPost","selDel"].forEach(function(id){
+    $(id).addEventListener("input", render);
+    $(id).addEventListener("change", render);
+  });
+  wireTc("A"); wireTc("B");
+
+  $("res").addEventListener("change", function(){
+    if (this.value !== "custom"){ var p = this.value.split("x"); $("cw").value = p[0]; $("ch").value = p[1]; }
+    render();
+  });
+  ["cw","ch"].forEach(function(id){
+    $(id).addEventListener("input", function(){
+      var key = $("cw").value + "x" + $("ch").value;
+      var hit = Array.prototype.some.call($("res").options, function(o){ return o.value === key; });
+      $("res").value = hit ? key : "custom";
+    });
+  });
+  [["dlres","dlw","dlh"]].forEach(function(g){
+    $(g[0]).addEventListener("change", function(){
+      if (this.value !== "custom"){ var q = this.value.split("x"); $(g[1]).value = q[0]; $(g[2]).value = q[1]; }
+      render();
+    });
+    [g[1],g[2]].forEach(function(id){
+      $(id).addEventListener("input", function(){
+        var key = $(g[1]).value + "x" + $(g[2]).value;
+        var hit = Array.prototype.some.call($(g[0]).options, function(o){ return o.value === key; });
+        $(g[0]).value = hit ? key : "custom";
+      });
+    });
+  });
+  $("cfps").addEventListener("input", function(){
+    var v = parseFloat(this.value), hit = "custom";
+    if (isFinite(v)) Object.keys(FPS).forEach(function(k){
+      if (Math.abs(v - parseFloat(k)) < 1e-9 || Math.abs(v - Math.round(FPS[k]*1000)/1000) < 1e-9) hit = k;
+    });
+    $("fps").value = hit;
+    render();
+  });
+  $("cfps").addEventListener("change", function(){ tidy("A", fpsNow()); tidy("B", fpsNow()); render(); });
+  $("fps").addEventListener("change", function(){
+    if (this.value !== "custom") $("cfps").value = Math.round(FPS[this.value]*1000)/1000;
+    tidy("A", fpsNow()); tidy("B", fpsNow()); render();
+  });
+  function setUnit(u){
+    unit = u;
+    $("uGb").setAttribute("aria-pressed", u === "Gb" ? "true" : "false");
+    $("uMB").setAttribute("aria-pressed", u === "MB" ? "true" : "false");
+    render();
+  }
+  $("uGb").addEventListener("click", function(){ setUnit("Gb"); });
+  $("uMB").addEventListener("click", function(){ setUnit("MB"); });
+  function setLean(v){
+    lean = !!v;
+    $("detTog").setAttribute("aria-pressed", lean ? "false" : "true");
+    render();
+  }
+  $("detTog").addEventListener("click", function(){ setLean(!lean); });
+
+  readHash();
+  // a linked value the menu no longer offers would leave the select empty
+  ["selCap","selDai","selTrim","selPost","selDel","res","dres","dlres","fps","dmode"].forEach(function(id){
+    if (!$(id).value) $(id).selectedIndex = 0;
+  });
+  $("uGb").setAttribute("aria-pressed", unit === "Gb" ? "true" : "false");
+  $("uMB").setAttribute("aria-pressed", unit === "MB" ? "true" : "false");
+  $("detTog").setAttribute("aria-pressed", lean ? "false" : "true");
+  tidy("A", fpsNow());
+  tidy("B", fpsNow());
+  render();
+})();
+</script>
+
+</body>
+</html>
