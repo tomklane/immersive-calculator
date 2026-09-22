@@ -1,0 +1,25 @@
+<!-- Immersive Project Calculator: loads the live copy from GitHub Pages.
+     Paste into ONE Squarespace Code Block (HTML mode). Never include <html>, <head> or <body> here:
+     Squarespace rewrites any <html tag it finds inside a code block. -->
+<iframe id="idrc" title="Immersive Project Calculator"
+        style="width:100%;height:1250px;border:0;display:block"></iframe>
+<script>
+(function(){
+  var CALC = "https://tomklane.github.io/immersive-calculator/";
+  var f = document.getElementById("idrc"), origin = new URL(CALC).origin;
+  // the calculator gets this page's address (for Copy link) and its #estimate
+  function load(){
+    f.src = CALC + "?embed=" + encodeURIComponent(location.href.split("#")[0]) + location.hash;
+  }
+  window.addEventListener("message", function(e){
+    if (e.origin !== origin || !e.data || typeof e.data !== "object") return;
+    if (e.data.type === "idrc-height" && e.data.h > 200) f.style.height = e.data.h + "px";
+    if (e.data.type === "idrc-hash" && typeof e.data.hash === "string"){
+      var base = location.href.split("#")[0];
+      history.replaceState(history.state, "", e.data.hash ? base + "#" + e.data.hash : base);
+    }
+  });
+  window.addEventListener("hashchange", load);   // a pasted link in the same tab
+  load();
+})();
+</script>
