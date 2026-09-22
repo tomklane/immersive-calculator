@@ -3,6 +3,12 @@
 Reconstructed from the development conversation up to the move to GitHub.
 From here on, one entry per change.
 
+## 2026-09-22 — frame height
+- The calculator repeats its height report for a few seconds and answers a ping, and the
+  Squarespace loader pings on load, so the frame sizes itself even when the page misses the first report.
+- Loader comment no longer spells out the html tag (Squarespace rewrote it even inside a comment).
+- Workflow on current checkout and setup-node versions.
+
 ## 2026-09-21 — moved to GitHub
 - Source now lives in this repo; GitHub Pages publishes it after the checks pass.
 - Squarespace block replaced by a small loader; estimate links and auto-height

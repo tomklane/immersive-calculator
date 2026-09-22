@@ -883,6 +883,12 @@
   if (EMBED){
     window.addEventListener("resize", fitFrame);
     if (window.ResizeObserver) new ResizeObserver(fitFrame).observe(document.querySelector(".wrap"));
+    // the host page can miss the first report, so repeat it for a few seconds and answer a ping
+    [500, 1500, 3000, 6000].forEach(function(t){ setTimeout(fitFrame, t); });
+    window.addEventListener("message", function(e){
+      try{ if (e.origin !== new URL(EMBED).origin) return; }catch(x){ return; }
+      if (e.data && e.data.type === "idrc-ping") fitFrame();
+    });
   }
 
   // same-origin frame (old srcdoc embed): the page URL is the parent's

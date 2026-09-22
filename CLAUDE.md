@@ -84,8 +84,10 @@ Shots, Handles, Nodes blank. Storage $20/TB, render $5/node hr. Offload/transfer
 
 ## Pitfalls already hit
 
-- Never put `<!doctype>`, `<html>`, `<head>` or `<body>` inside a Squarespace Code Block:
-  Squarespace rewrites any `<html` tag it finds, which once truncated the whole embed.
+- Never put `<!doctype>`, `<html>`, `<head>` or `<body>` inside a Squarespace Code Block, not even
+  in a comment: Squarespace rewrites any `<html` it finds, which once truncated the whole embed.
+- The site page can miss the calculator's first height report, so the calculator repeats it and
+  answers `idrc-ping`; the loader pings on load. Keep both if you touch either.
 - Squarespace shows "JavaScript and iframe embeds is a Premium Feature" in the editor, yet
   the block serves and runs for visitors. If the page ever goes blank, that is the cause.
 - While logged into Squarespace, opening the page redirects into the editor and drops the
